@@ -61,8 +61,6 @@ step = 0  # animation state
 string_chunks = []  # chunks of a string read from serial
 
 # utility functions
-
-
 def draw_bw_key(key):
     if is_pressed[key.number]:
         key.set_led(255, 255, 255)
