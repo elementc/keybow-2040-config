@@ -10,6 +10,9 @@ import usb_hid
 from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 from adafruit_hid.keycode import Keycode
+from adafruit_hid.mouse import Mouse
+import time
+
 
 # config
 
@@ -22,7 +25,8 @@ scancodes = {
 fixed_hues = {
     3: 0.45,  # sky blue for code change key
     12: 0,  # red for push-to-talk
-    15: 0.19  # yellow for lock key
+    15: 0.19,  # yellow for lock key
+    4: 0.4375,  # teal for "save media" key
     # 0: 0.0625,  # peach
     # 1: 0.125,  # goldenrod
     # 2: 0.1875,  # yellow-green
@@ -61,6 +65,8 @@ step = 0  # animation state
 string_chunks = []  # chunks of a string read from serial
 
 # utility functions
+
+
 def draw_bw_key(key):
     if is_pressed[key.number]:
         key.set_led(255, 255, 255)
@@ -81,7 +87,7 @@ def draw_rainbow_key(key, value):
 
 
 def draw_key(key):
-    """ Draw one key."""
+    """Draw one key."""
     if current_color_mode == COLOR_MODE_OFF:
         draw_bw_key(key)
     elif current_color_mode == COLOR_MODE_FIXED_LOW:
@@ -138,11 +144,6 @@ def change_light_mode(key):
     draw_all_keys()
 
 
-# register of special actions
-special_actions = {
-    3: change_light_mode,
-}
-
 # Set up Keybow electronics
 i2c = board.I2C()
 keybow = Keybow2040(i2c)
@@ -151,6 +152,39 @@ console = usb_cdc.serials[0]
 # Set up the keyboard and layout
 keyboard = Keyboard(usb_hid.devices)
 layout = KeyboardLayoutUS(keyboard)
+
+# Set up the mouse.
+mouse = Mouse(usb_hid.devices)
+
+# grabs and saves the media object under the mouse in firefox
+def save_media_under_mouse(key):
+    keyboard.press(Keycode.LEFT_SHIFT)
+    time.sleep(0.3)
+    mouse.click(Mouse.RIGHT_BUTTON)
+    keyboard.release(Keycode.LEFT_SHIFT)
+    time.sleep(0.4)
+    keyboard.press(Keycode.V)
+    keyboard.release(Keycode.V)
+    time.sleep(0.7)
+    mouse.click(Mouse.LEFT_BUTTON)
+    time.sleep(0.4)
+    keyboard.press(Keycode.ENTER)
+    keyboard.release(Keycode.ENTER)
+    time.sleep(0.4)
+    keyboard.press(Keycode.ENTER)
+    keyboard.release(Keycode.ENTER)
+    time.sleep(0.5)
+    keyboard.press(Keycode.RIGHT_ARROW)
+    time.sleep(0.2)
+    keyboard.release(Keycode.RIGHT_ARROW)
+
+
+# register of special actions
+special_actions = {
+    3: change_light_mode,
+    4: save_media_under_mouse,
+}
+
 
 # global init:
 pump_rainbow_hues()  # do once to have valeus for when we are good to run.
